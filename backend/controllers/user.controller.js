@@ -3,6 +3,23 @@ import { asyncHandler} from "../utils/asyncHandler.js";
 import {ApiError} from "../utils/ApiError.js";
 import {ApiResponse} from "../utils/ApiResponse.js"
 
+
+
+const generateAccessToken = async(userId)=>
+    {
+        try {
+            const user = await userModel.findById(userId)
+            const accessToken =user.generateAccessToken()// calling geratedAccess token which is present in user model
+        
+    
+            return {accessToken}
+    
+    
+        } catch (error) {
+            throw new ApiError(500 , "Something is wrong while generating refresh and access token")
+            
+        }
+    }
 const registerUser = asyncHandler(async(req,res)=>{
     const {email,password} = req.body
     console.log("email",email);
@@ -36,7 +53,46 @@ const registerUser = asyncHandler(async(req,res)=>{
     .json(new ApiResponse(200 , {createdUser , token }, "User register successfully"))
 })
 
+const loggedinUser = asyncHandler(async(req,res)=>{
+    const {email,password} = req.body
+    if(!email || !password)
+    {
+        throw new ApiError(400,"Enter email and password");
+    }
+    console.log(password);
+
+    const user = await userModel.findOne({email}).select('+password');
+
+    if(!user)
+    {
+        throw new ApiError(401,"Email or User is invalid");
+    }
+    const isValidPassword = await user.isValidPassword(password);
+
+    if(!isValidPassword)
+    {
+        throw new ApiError(402,"Password is Invalid ,Enter correct password");
+    }
+
+    const token = await generateAccessToken(user._id)
+    const options={
+        httpOnly: true,
+        secure: true
+    }
+    return res
+    .status(200)
+    .cookie("accessToken",token,options)
+    .json(
+        new ApiResponse(
+            200,
+            { user: loggedinUser,token},
+            "User logged In Successfully"
+        )
+    )
+})
+
 export {
-    registerUser
+    registerUser,
+    loggedinUser
 }
 
