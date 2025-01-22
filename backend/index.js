@@ -17,3 +17,6 @@ connectDB()
         throw error;
     })
 })
+.catch((error)=>{
+    console.log("Database is fail to connect", error);
+})
