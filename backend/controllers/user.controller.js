@@ -2,7 +2,7 @@ import userModel from "../models/user.model.js";
 import { asyncHandler} from "../utils/asyncHandler.js";
 import {ApiError} from "../utils/ApiError.js";
 import {ApiResponse} from "../utils/ApiResponse.js"
-
+import { authUser } from "../middleware/auth.middleware.js";
 
 
 const generateAccessToken = async(userId)=>
@@ -16,7 +16,7 @@ const generateAccessToken = async(userId)=>
     
     
         } catch (error) {
-            throw new ApiError(500 , "Something is wrong while generating refresh and access token")
+            throw new ApiError(500 , "Something is wrong while access token")
             
         }
     }
@@ -77,11 +77,14 @@ const loggedinUser = asyncHandler(async(req,res)=>{
     const token = await generateAccessToken(user._id)
     const options={
         httpOnly: true,
-        secure: true
+        secure: process.env.NODE_ENV === 'production'
     }
+    
+    res.cookie.set("accessToken", token, options); // syntax for cookie library
+
     return res
     .status(200)
-    .cookie("accessToken",token,options)
+    //.cookie("accessToken", accessToken, options) for cookie-parser
     .json(
         new ApiResponse(
             200,
@@ -91,8 +94,23 @@ const loggedinUser = asyncHandler(async(req,res)=>{
     )
 })
 
+const profileController = asyncHandler(async(req,res)=>{
+    console.log(req.user);
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            { user: req.user},
+            "User Profile In Successfully Access"
+        )
+    )
+})
+
 export {
     registerUser,
-    loggedinUser
+    loggedinUser,
+    profileController
 }
 

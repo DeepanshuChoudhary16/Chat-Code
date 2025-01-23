@@ -39,12 +39,13 @@ userSchema.methods.isValidPassword = async function(password){
 userSchema.methods.generateAccessToken = function(){
     return jwt.sign(  // .sign method use to generate jwt which have three parameters
         {                 
-            email:this.email,
+            email: this.email,
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+            expiresIn: process.env.ACCESS_TOKEN_EXPIRED,
         }
+        
     )
 }
 
