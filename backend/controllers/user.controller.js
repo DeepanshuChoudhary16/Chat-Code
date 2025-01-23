@@ -80,7 +80,7 @@ const loggedinUser = asyncHandler(async(req,res)=>{
         secure: process.env.NODE_ENV === 'production'
     }
     
-    res.cookie.set("accessToken", token, options); // syntax for cookie library
+    res.cookie("accessToken", token, options); // syntax for cookie library
 
     return res
     .status(200)
