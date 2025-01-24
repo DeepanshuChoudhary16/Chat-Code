@@ -2,7 +2,8 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from '../utils/ApiError.js';
 import User from '../models/user.model.js';
 import jwt from "jsonwebtoken"
-
+import redisClient from "../service/redis.service.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 export const authUser = asyncHandler(async (req, res, next) => {
   try {
@@ -22,7 +23,20 @@ export const authUser = asyncHandler(async (req, res, next) => {
     if (!token) {
       throw new ApiError(401, "Unauthorized request - No token found");
     }
-    
+
+    const isBlackListed = await redisClient.get(token)
+
+    if(isBlackListed)
+    {
+      res.cookies('token','')
+      return res
+      .status(401)
+      .json(
+        new ApiResponse(
+          401,"Unauthorizes User"
+        )
+      )
+    }
     // Verify the JWT token
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     console.log("decodedToken:", decodedToken);
