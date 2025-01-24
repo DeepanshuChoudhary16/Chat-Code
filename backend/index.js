@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import app from "./app.js";
 import connectDB from "./db/db.js";
+import Redis from "ioredis";
 
 dotenv.config({
     path:'./.env'
@@ -20,3 +21,4 @@ connectDB()
 .catch((error)=>{
     console.log("Database is fail to connect", error);
 })
+
