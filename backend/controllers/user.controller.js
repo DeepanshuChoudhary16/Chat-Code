@@ -2,9 +2,7 @@ import userModel from "../models/user.model.js";
 import { asyncHandler} from "../utils/asyncHandler.js";
 import {ApiError} from "../utils/ApiError.js";
 import {ApiResponse} from "../utils/ApiResponse.js"
-import { authUser } from "../middleware/auth.middleware.js";
-
-
+import redisClient from "../service/redis.service.js"
 const generateAccessToken = async(userId)=>
     {
         try {
@@ -108,9 +106,36 @@ const profileController = asyncHandler(async(req,res)=>{
     )
 })
 
+const loggedoutUser= asyncHandler(async(req,res)=>{
+    try {
+        const cookieToken = req.cookies.get('accessToken')
+        if(!cookieToken)
+        {
+            console.log("Accress Token not found in cookie");
+        }
+        const decodedCookie = decodeURIComponent(cookieToken);
+        const token = decodedCookie?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
+
+        redisClient.set(token,'logout','EX',60*60*24)
+        return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                "User logOut Successfully"
+            )
+        )
+    } 
+    catch (error) {
+        console.log("error in logout endpoint");
+        throw new ApiError(402,"Error in Logout endPoint")
+    }
+})
+
 export {
     registerUser,
     loggedinUser,
-    profileController
+    profileController,
+    loggedoutUser
 }
 
