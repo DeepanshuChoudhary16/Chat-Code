@@ -42,13 +42,14 @@ const registerUser = asyncHandler(async(req,res)=>{
         "-password"
     )
     const token = await user.generateAccessToken()
+    delete user._doc.password
     if(!createdUser)
         {
             throw new ApiError(500,"Something going wrong while creating User")
         }
     return res
     .status(201)
-    .json(new ApiResponse(200 , {createdUser , token }, "User register successfully"))
+    .json(new ApiResponse(200 , {user:user,createdUser , token }, "User register successfully"))
 })
 
 const loggedinUser = asyncHandler(async(req,res)=>{
@@ -57,7 +58,6 @@ const loggedinUser = asyncHandler(async(req,res)=>{
     {
         throw new ApiError(400,"Enter email and password");
     }
-    console.log(password);
 
     const user = await userModel.findOne({email}).select('+password');
 
@@ -77,16 +77,17 @@ const loggedinUser = asyncHandler(async(req,res)=>{
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production'
     }
-    
+    delete user._doc.password;
     res.cookie("accessToken", token, options); // syntax for cookie library
 
     return res
     .status(200)
     //.cookie("accessToken", accessToken, options) for cookie-parser
     .json(
+        
         new ApiResponse(
             200,
-            { user: loggedinUser,token},
+            { user: user,token},
             "User logged In Successfully"
         )
     )
