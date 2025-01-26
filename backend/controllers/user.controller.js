@@ -135,10 +135,26 @@ const loggedoutUser= asyncHandler(async(req,res)=>{
     }
 })
 
+const getAllUser = asyncHandler(async(req,res)=>{
+        const loggedInUser = await userModel.findOne({
+            email: req.user.email
+        })
+
+        const userId = loggedInUser._id
+        
+        const allUser = await userModel.find({
+            _id:{$ne:userId}
+        })
+        return res
+        .status(200)
+        .json(200,new ApiResponse(200,{AllUser:allUser},"Fetch all user"))
+
+})
 export {
     registerUser,
     loggedinUser,
     profileController,
-    loggedoutUser
+    loggedoutUser,
+    getAllUser
 }
 
