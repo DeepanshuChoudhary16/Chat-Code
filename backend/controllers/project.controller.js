@@ -3,6 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import User from "../models/user.model.js";
+import mongoose from "mongoose";
 
 const createProject = asyncHandler(async(req,res)=>{
    try {
@@ -37,25 +38,83 @@ const createProject = asyncHandler(async(req,res)=>{
 })
 
 const getAllProject = asyncHandler(async(req,res)=>{
-    const loggedInUser = await User.findOne({email:req.user.email})
-    const userId = loggedInUser._id
-
-    if(!userId){
-        throw new ApiError(404,"User is required")
+    try {
+        const loggedInUser = await User.findOne({email:req.user.email})
+        const userId = loggedInUser._id
+    
+        if(!userId){
+            throw new ApiError(404,"User is required")
+        }
+    
+        const alluserProject = await projectModel.find({
+            users: userId
+        })
+    
+        return res
+        .status(200)
+        .json(
+            new ApiResponse(200,{projects: alluserProject})
+        )
+    } catch (error) {
+        throw new ApiError(406,"Unbale to getAllProject")
     }
-
-    const alluserProject = await projectModel.find({
-        users: userId
-    })
-
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(200,{projects: alluserProject})
-    )
 })
 
-const
+const addUserToProject = asyncHandler(async(req,res)=>{
+    try {
+        const {projectId,users} = req.body
+        if(!projectId)
+        {
+            throw new ApiError(404,"ProjectId is required")
+        }
+        if(!mongoose.Types.ObjectId.isValid(projectId)){
+            throw new ApiError(404,"Invalid projectId")
+        }
+        if(!users)
+        {
+            throw new ApiError(404,"user are required")
+        }
+        if(!Array.isArray(users) || users.some(userId => !mongoose.Types.ObjectId.isValid(userId)))
+        {
+            throw new ApiError(404,"Invalis userId(s) in users array")
+        }
+        const LoggedInUser = await User.findOne({
+            email:req.user.email
+        })
+        const userId = LoggedInUser._id
+        const project = await projectModel.findOne({
+            _id: projectId,
+            users:userId
+        })
+
+        if(!project){
+            throw new Error("user not belong to this project")
+        }
+        const updateProject = await projectModel.findOneAndUpdate({
+            _id:projectId
+        },
+        {
+            $addToSet:{
+                users:{
+                    $each:users
+                }
+            }
+        },
+        {
+            new:true
+        })
+        console.log("User add to project successfully")
+        return res
+        .status(200)
+        .json(new ApiResponse(200,{updateProject})
+        )
+        
+    } catch (error) {
+        console.log(error)
+        
+    }
+})
 export {
     createProject,
-    getAllProject};
+    getAllProject,
+    addUserToProject};
