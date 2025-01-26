@@ -28,7 +28,8 @@ export const authUser = asyncHandler(async (req, res, next) => {
 
     if(isBlackListed)
     {
-      res.cookies('token','')
+      // res.cookies('token','')
+      console.log("isblackListed")
       return res
       .status(401)
       .json(

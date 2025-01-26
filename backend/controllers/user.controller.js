@@ -118,13 +118,15 @@ const loggedoutUser= asyncHandler(async(req,res)=>{
         const token = decodedCookie?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
 
         redisClient.set(token,'logout','EX',60*60*24)
+        console.log("User logOut Successfully")
         return res
         .status(200)
         .json(
             new ApiResponse(
                 200,
+                {},
                 "User logOut Successfully"
-            )
+            ),
         )
     } 
     catch (error) {
