@@ -36,4 +36,26 @@ const createProject = asyncHandler(async(req,res)=>{
     }
 })
 
-export {createProject};
+const getAllProject = asyncHandler(async(req,res)=>{
+    const loggedInUser = await User.findOne({email:req.user.email})
+    const userId = loggedInUser._id
+
+    if(!userId){
+        throw new ApiError(404,"User is required")
+    }
+
+    const alluserProject = await projectModel.find({
+        users: userId
+    })
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,{projects: alluserProject})
+    )
+})
+
+const
+export {
+    createProject,
+    getAllProject};
