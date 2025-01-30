@@ -114,7 +114,41 @@ const addUserToProject = asyncHandler(async(req,res)=>{
         
     }
 })
+
+const getProjectById = asyncHandler(async(req,res)=>{
+    try {
+        console.log("enter the try part")
+        const {projectId} = req.params;
+        if(!projectId)
+        {
+            throw new ApiError("project is required")
+        }
+        if(!mongoose.Types.ObjectId.isValid(projectId))
+        {
+            
+            throw new ApiError("Invalid projectId");
+        }
+        console.log("all is good")
+    
+        const project = await projectModel.findOne({
+            _id:projectId
+        }).populate('users').exec()
+        console.log("project",project)
+
+        return res
+        .status(200)
+        .json(new ApiResponse(
+            200,
+            {project:project}
+            ,"Project get Successfully"
+        ))
+    } catch (error) {
+        throw new ApiError(401,"Error in projectGetById")
+    }
+})
 export {
     createProject,
     getAllProject,
-    addUserToProject};
+    addUserToProject,
+    getProjectById 
+};
