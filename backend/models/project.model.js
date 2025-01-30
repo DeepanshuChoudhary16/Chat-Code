@@ -11,7 +11,7 @@ const projectSchema = new Schema({
     users:[
         {
         type: Schema.Types.ObjectId,
-        ref: 'user'
+        ref: 'User'
     }]
 })
 
