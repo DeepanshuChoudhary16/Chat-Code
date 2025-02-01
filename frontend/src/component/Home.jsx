@@ -1,32 +1,44 @@
-import React, { useContext, useState, useEffect } from 'react'
-import { UserContext } from '../context/User.Contex'
-import axios from "../config/axios"
-import { useNavigate } from 'react-router-dom'
+import React, { useContext, useState, useEffect } from 'react';
+import { UserContext } from '../context/User.Contex';
+import axios from "../config/axios";
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
+    const { user } = useContext(UserContext);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [projectName, setProjectName] = useState("");
+    const [project, setProject] = useState([]);
 
-    const [ isModalOpen, setIsModalOpen ] = useState(false)
-    const[projectName , setProjectName] =useState(null)
-    const createProject =(e)=>{
-      e.preventDefault()
-      console.log({projectName})
+    const navigate = useNavigate();
 
-      axios.post('/api/v1/project/create',{
-        name:projectName,
-      })
-      .then((res)=>{
-        console.log(red)
-        setIsModalOpen(false)
-      })
-      .catch((error)=>{
-        console.log(error)
-      })
+    function createProject(e) {
+        e.preventDefault();
+        console.log({ projectName });
 
+        axios.post('/api/v1/project/create', { name: projectName })
+            .then((res) => {
+                console.log(res);
+                setIsModalOpen(false);
+                setProject([...project, res.data.project]); // Add new project to state
+            })
+            .catch(() => {
+                console.log("Project creation failed");
+            });
     }
 
-    
+    useEffect(() => {
+        console.log('Token:', localStorage.getItem('token'));
 
-    
+        axios.get('/api/v1/project/all')
+            .then((res) => {
+                console.log("Response:", res.data);
+                setProject(res.data.data.projects || []);
+            })
+            .catch((err) => {
+                console.error("Error fetching projects:", err);
+            });
+
+    }, []); // Run only once
 
     return (
         <main className='p-4'>
@@ -38,29 +50,22 @@ const Home = () => {
                     <i className="ri-link ml-2"></i>
                 </button>
 
-                {
-                    project.map((project) => (
-                        <div key={project._id}
-                            onClick={() => {
-                                navigate(`/project`, {
-                                    state: { project }
-                                })
-                            }}
+                {project && project.length > 0 ? (
+                    project.map((proj) => (
+                        <div key={proj._id}
+                            onClick={() => navigate(`/project`, { state: { project: proj } })}
                             className="project flex flex-col gap-2 cursor-pointer p-4 border border-slate-300 rounded-md min-w-52 hover:bg-slate-200">
-                            <h2
-                                className='font-semibold'
-                            >{project.name}</h2>
+                            <h2 className='font-semibold'>{proj.name}</h2>
 
                             <div className="flex gap-2">
-                                <p> <small> <i className="ri-user-line"></i> Collaborators</small> :</p>
-                                {project.users.length}
+                                <p><small><i className="ri-user-line"></i> Collaborators</small> :</p>
+                                {proj.users.length}
                             </div>
-
                         </div>
                     ))
-                }
-
-
+                ) : (
+                    <p>No projects found.</p>
+                )}
             </div>
 
             {isModalOpen && (
@@ -73,20 +78,22 @@ const Home = () => {
                                 <input
                                     onChange={(e) => setProjectName(e.target.value)}
                                     value={projectName}
-                                    type="text" className="mt-1 block w-full p-2 border border-gray-300 rounded-md" required />
+                                    type="text"
+                                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+                                    required
+                                />
                             </div>
                             <div className="flex justify-end">
-                                <button type="button" className="mr-2 px-4 py-2 bg-gray-300 rounded-md" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                                <button type="button" className="mr-2 px-4 py-2 bg-gray-300 rounded-md"
+                                    onClick={() => setIsModalOpen(false)}>Cancel</button>
                                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md">Create</button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
-
-
         </main>
-    )
-}
+    );
+};
 
-export default Home
+export default Home;
