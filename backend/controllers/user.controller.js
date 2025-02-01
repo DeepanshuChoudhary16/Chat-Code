@@ -73,21 +73,21 @@ const loggedinUser = asyncHandler(async(req,res)=>{
     }
 
     const token = await generateAccessToken(user._id)
+    console.log("token in login controler",token)
     const options={
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production'
+        secure: true
     }
     delete user._doc.password;
-    res.cookie("accessToken", token, options); // syntax for cookie library
 
     return res
     .status(200)
-    //.cookie("accessToken", accessToken, options) for cookie-parser
+    .cookie("Token", token.accessToken, options)
     .json(
         
         new ApiResponse(
             200,
-            { user: user,token},
+            { user:user,token},
             "User logged In Successfully"
         )
     )
