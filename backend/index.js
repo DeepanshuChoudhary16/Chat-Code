@@ -4,6 +4,8 @@ import connectDB from "./db/db.js";
 import { Server } from "socket.io";
 import { ApiError } from "./utils/ApiError.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import projectModel from "./models/project.model.js";
 
 
 dotenv.config({
@@ -31,9 +33,18 @@ connectDB()
     })
 
 
-    io.use((socket,next) =>{
+    io.use(async (socket,next) =>{
         try {
             const token = socket.handshake.auth?.token || socket.handshake.headers.authorization?.replace("Bearer ", "");
+            const projectId = socket.handshake.query.projectId;
+
+            if(!mongoose.Types.ObjectId.isValid(projectId))
+            {
+                return next(new Error('Invalid projectId'))
+            }
+
+            socket.project = await projectModel.findById(projectId);
+
             if(!token){
                 return next(new Error('Authentication Error , token is not found for socket'))
             }
@@ -57,11 +68,21 @@ connectDB()
     })
     
     io.on('connection', socket => {
-        
+        socket.roomID = socket.project._id.toString()
         console.log("a user is connect")
 
-        socket.on('event', data => { /* … */ });
-        socket.on('disconnect', () => { /* … */ });
+        socket.join(socket.roomID)
+
+        socket.on('project-message',data =>{
+
+            console.log("message: ",data)
+            socket.broadcast.to(socket.roomId).emit('project-message', data)
+        })
+
+        socket.on('disconnect', () => {
+            console.log('user disconnected');
+            socket.leave(socket.roomId)
+        });
     });
 })
 .catch((error)=>{
