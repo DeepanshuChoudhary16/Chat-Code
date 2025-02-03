@@ -1,7 +1,7 @@
 import {useEffect, useState} from 'react'
 import { useNavigate,useLocation } from 'react-router-dom'
 import axios from '../config/axios'
-
+import { initializeSocket ,receiveMessage,sendMessage } from '../config/socket'
 const Project = () => {
 
     const navigate = useNavigate()
@@ -11,6 +11,8 @@ const Project = () => {
     const [ selectedUserId, setSelectedUserId ] = useState(new Set()) 
     const [ users, setUsers ] = useState([])
     useEffect(()=>{
+
+        initializeSocket() 
         axios.get('/api/v1/users/all').then(res => {
 
             setUsers(res.data.allUser)
