@@ -133,13 +133,14 @@ const getProjectById = asyncHandler(async(req,res)=>{
         const project = await projectModel.findOne({
             _id:projectId
         }).populate('users').exec()
-        console.log("project",project)
+
+        
 
         return res
         .status(200)
         .json(new ApiResponse(
             200,
-            {project:project}
+            {project}
             ,"Project get Successfully"
         ))
     } catch (error) {

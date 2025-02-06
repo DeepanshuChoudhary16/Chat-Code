@@ -6,7 +6,7 @@ import { ApiError } from "./utils/ApiError.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import projectModel from "./models/project.model.js";
-
+import { generateResult } from "./service/ai.service.js";
 
 dotenv.config({
     path:'./.env'
@@ -69,14 +69,40 @@ connectDB()
     
     io.on('connection', socket => {
         socket.roomID = socket.project._id.toString()
+
         console.log("a user is connect")
+        
 
         socket.join(socket.roomID)
 
-        socket.on('project-message',data =>{
+        socket.on('project-message', async data =>{
+
+            const message = data.message
+
+            console.log('message',data)
+
+            const  aiIsPeresentInMessage = message.includes('@ai')
+            socket.broadcast.to(socket.roomID).emit('project-message', data)
+
+            if(aiIsPeresentInMessage)
+            {
+                const prompt = message.replace('@ai','')
+
+                const result = await generateResult(prompt);
+
+                io.to(socket.roomID).emit('project-message',{
+                    message: result,
+                    sender:{
+                        _id:'ai',
+                        email:'AI'
+                    }
+                })
+
+                return
+            }
 
             console.log("message: ",data)
-            socket.broadcast.to(socket.roomId).emit('project-message', data)
+            
         })
 
         socket.on('disconnect', () => {

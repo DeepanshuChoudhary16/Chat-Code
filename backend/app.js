@@ -14,11 +14,9 @@ app.use(cookieParser());
 
 import userRouter from './routers/user.routes.js';
 import  projectRouter from './routers/project.routes.js'
-// routes declaration
-// we declare routes as middleware by using "use."
+import aiRouter from './routers/ai.routes.js'
 app.use("/api/v1/users", userRouter)
-                        // raha s ham routers pr jayege 
-//exmpale of req -> http://localhost:3000/api/v1/users/register
 app.use("/api/v1/project",projectRouter);
+app.use("/api/v1/ai",aiRouter)
 
 export default app;
